@@ -26,10 +26,7 @@ class WavefrontObject
 
   def parse!
     while line = file.gets
-      #puts line
       components = line.split
-
-      #puts "components are #{components.inspect}"
       type = components.shift
       case type
         when 'v'
@@ -40,7 +37,6 @@ class WavefrontObject
           normals << Vec3.new(*components.map(&:to_f))
         when 'vp'
           #TODO: handle these later
-          raise "the current version of this gem does not know how to handle vp"
         when 'f'
           triangles = []
           if components.size > 4
@@ -62,17 +58,11 @@ class WavefrontObject
         when 's'
           groups[@current_group].set_smoothing_group components.first
         when 'o'
+          raise "Wavefront Version #{Wavefront::VERSION} does not support obj files with more than one object. If you encounter such an obj that fails to load, please attach and email to mishaAconway@gmail.com so that I can update the gem to support the file."
           file.seek -line.size, IO::SEEK_CUR
           return
       end
     end
-    # file.close
-
-    #compute_triangles_in_groups
-    # rescue => err
-    #  puts "Exception: #{err}"
-    #   err
-    # end
   end
 
   def num_faces
@@ -85,6 +75,10 @@ class WavefrontObject
 
 
   def export file_name
+    unless /\.obj$/.match file_name
+      file_name += ".obj"
+    end
+
     File.delete file_name if File.exist? file_name
     open file_name, 'a' do |f|
       f.puts "# Exported from Wavefront Ruby Gem Version #{Wavefront::VERSION}"
@@ -104,22 +98,24 @@ class WavefrontObject
           smoothing_group.triangles.each do |t|
             f.puts 'f ' + t.vertices.map { |v| [v.position_index, v.texture_index, v.normal_index].join '/' }.join(' ')
           end
-
-
         end
-
-
       end
     end
   end
 
-
-  def compute_vertex_buffers
-    nil
+  def compute_vertex_buffer
+    vertex_buffer = []
+    groups.values.each do |group|
+      group.triangles.each { |t| vertex_buffer << t.vertices }
+      group.smoothing_groups.values.each do |smoothing_group|
+        smoothing_group.triangles.each{ |t| vertex_buffer << t.vertices }
+      end
+    end
+    vertex_buffer.flatten
   end
 
   def compute_vertex_buffer_and_index_buffer
-    raise "not yet implemented!"
+    raise "not yet implemented in version #{Wavefront::VERSION}! will be coming in future versions!"
     vertex_buffer, index_buffer = [], []
 
 
