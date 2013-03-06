@@ -8,8 +8,8 @@ Gem::Specification.new do |gem|
   gem.version       = Wavefront::VERSION
   gem.authors       = ["Misha Conway"]
   gem.email         = ["MishaAConway@gmail.com"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.description   = %q{Wavefront parser and exporter}
+  gem.summary       = %q{Wavefront parser and exporter}
   gem.homepage      = ""
 
   gem.files         = `git ls-files`.split($/)

@@ -4,21 +4,21 @@ class Group
   def initialize n
     @name = n
     @triangles = []
-    @smoothing_groups = []
+    @smoothing_groups = {}
   end
 
   def set_smoothing_group id
     if id.nil? || 'off' == id
       @current_smoothing_group = nil
     else
-      smoothing_groups << SmoothingGroup.new(id) unless smoothing_groups.map(&:id).include? id
-      @current_smoothing_group = smoothing_groups.find{ |sg| sg.id == id }
+      smoothing_groups[id] = SmoothingGroup.new(id) unless smoothing_groups.keys.include? id
+      @current_smoothing_group = smoothing_groups[id]
     end
   end
 
   def merge_smoothing_groups!
     set_smoothing_group nil
-    smoothing_groups.each{ |smoothing_group| triangles += smoothing_group.triangles }
+    smoothing_groups.values.each{ |smoothing_group| triangles += smoothing_group.triangles }
     smooth_groups.clear
   end
 
@@ -31,11 +31,11 @@ class Group
   end
 
   def num_faces
-    triangles.size + smoothing_groups.map(&:num_faces).sum
+    triangles.size + smoothing_groups.values.map(&:num_faces).inject(:+)
   end
 
   def num_vertices
-    triangles.size * 3  #this needs to be updated
+    triangles.size * 3 + smoothing_groups.values.map(&:num_vertices).inject(:+)
   end
 
   def compute_vertex_buffer
@@ -46,10 +46,5 @@ class Group
 
   def compute_vertex_and_index_buffer
     indices, vertices = [], []
-
-
-
-
-
   end
 end

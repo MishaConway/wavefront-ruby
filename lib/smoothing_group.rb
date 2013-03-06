@@ -14,6 +14,10 @@ class SmoothingGroup
     triangles.size
   end
 
+  def num_vertices
+      triangles.size * 3  #this needs to be updated
+  end
+
   def to_s
     "Smoothing Group\n\tNum Faces: #{num_faces}"
   end

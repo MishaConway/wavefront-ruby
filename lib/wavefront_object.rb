@@ -10,11 +10,15 @@ class WavefrontObject
 
   def to_s
     s = "Object\n\tName: #{name}\n\tNum Vertices: #{vertices.size}\n\tNum Faces: #{num_faces}"
-    if groups.present?
+    unless groups.size.zero?
       s += "\n"
       groups.keys.each do |k|
         group = groups[k]
         s += "\tGroup #{k}\n\t\tNum Vertices: #{group.num_vertices}\n\t\tNum Faces: #{group.num_faces}"
+        group.smoothing_groups.keys.each do |sk|
+          smooth = group.smoothing_groups[sk]
+          s += "\n\t\t\tSmoothing Group #{sk}\n\t\t\t\tNum Vertices: #{smooth.num_vertices}\n\t\t\t\tNum Faces: #{smooth.num_faces}"
+        end
       end
     end
     s
@@ -50,7 +54,7 @@ class WavefrontObject
           else
             raise "current version of gem cannot parse triangles with #{components.size} verts!"
           end
-          triangles.each{ |triangle| groups[@current_group].add_triangle triangle }
+          triangles.each { |triangle| groups[@current_group].add_triangle triangle }
         when 'g'
           name = components.first
           groups[name] = Group.new name
@@ -62,7 +66,7 @@ class WavefrontObject
           return
       end
     end
-   # file.close
+    # file.close
 
     #compute_triangles_in_groups
     # rescue => err
@@ -74,7 +78,7 @@ class WavefrontObject
   def num_faces
     @num_faces = 0
     groups.keys.each do |k|
-      @num_faces += groups[k].triangles.size
+      @num_faces += groups[k].num_faces
     end
     @num_faces
   end
@@ -83,17 +87,28 @@ class WavefrontObject
   def export file_name
     File.delete file_name if File.exist? file_name
     open file_name, 'a' do |f|
-      f.puts "# Exported from Wavefront Ruby Gem 3D"  #todo: put version here
+      f.puts "# Exported from Wavefront Ruby Gem Version #{Wavefront::VERSION}"
+      f.puts "o #{name}"
       f.puts "##{vertices.size} vertices, #{num_faces} faces"
-      vertices.each{ |v| f.puts "v #{v}" }
-      texture_coordinates.each{ |t| f.puts "vt #{t}"}
-      normals.each{ |n| f.puts "vn #{n}"}
+      vertices.each { |v| f.puts "v #{v}" }
+      texture_coordinates.each { |t| f.puts "vt #{t}" }
+      normals.each { |n| f.puts "vn #{n}" }
       groups.keys.each do |k|
         group = groups[k]
         f.puts "g ##{group.name}"
         group.triangles.each do |t|
-          f.puts 'f ' + t.vertices.map{|v| [v.position_index, v.texture_index, v.normal_index].join '/'}.join(' ')
+          f.puts 'f ' + t.vertices.map { |v| [v.position_index, v.texture_index, v.normal_index].join '/' }.join(' ')
         end
+        group.smoothing_groups.each do |sk, smoothing_group|
+          f.puts "s #{sk}"
+          smoothing_group.triangles.each do |t|
+            f.puts 'f ' + t.vertices.map { |v| [v.position_index, v.texture_index, v.normal_index].join '/' }.join(' ')
+          end
+
+
+        end
+
+
       end
     end
   end
@@ -104,21 +119,19 @@ class WavefrontObject
   end
 
   def compute_vertex_buffer_and_index_buffer
-     raise "not yet implemented!"
-     vertex_buffer, index_buffer = [], []
+    raise "not yet implemented!"
+    vertex_buffer, index_buffer = [], []
 
 
+    {:vertex_buffer => vertex_buffer, :index_buffer => index_buffer}
+  end
 
-
-     {:vertex_buffer => vertex_buffer, :index_buffer => index_buffer}
-   end
-
-private
+  private
 
   def triangle_from_face_components face_components
     triangle_vertices = []
     face_components.each do |vertex_str|
-      vertex_str_components = vertex_str.split('/').map{|index| index.present?? index.to_i : nil}
+      vertex_str_components = vertex_str.split('/').map { |index| index.size > 0 ? index.to_i : nil }
       position_index = vertex_str_components[0]
       tex_index = vertex_str_components[1]
 
