@@ -10,7 +10,7 @@ Gem::Specification.new do |gem|
   gem.email         = ["MishaAConway@gmail.com"]
   gem.description   = %q{Wavefront parser and exporter}
   gem.summary       = %q{Wavefront parser and exporter}
-  gem.homepage      = ""
+  gem.homepage      = "https://github.com/MishaConway/wavefront-ruby"
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
