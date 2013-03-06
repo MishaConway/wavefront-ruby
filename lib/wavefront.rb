@@ -7,12 +7,3 @@ require "group"
 require "wavefront_object"
 require "wavefront_file"
 
-module Wavefront
-
-
-
-
-
-
-
-end
