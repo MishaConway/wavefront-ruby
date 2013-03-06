@@ -51,14 +51,14 @@ Or install it yourself as:
 
 ## Usage
 
-    Some here is a little primer. A wavefront object basically contains a single object. This single object contains
+    So here is a little primer. A wavefront object basically contains a single object. This single object contains
     several groups. Each of these groups can contain sub smoothing groups. Both groups and smoothing groups have a
     list of triangles. Each triangle contains three vertices while each vertex contains a position, normal, and
     texture coordinate. I've tried to make it so that the parsed WavefrontFile instance represents this hierarchy
     as much as possible. Now with primer aside, let's go over some sample values we can extract from the
     WavefrontFile instance.
 
-    w = WavefrontFile.new "my_waverfront_model"                   (import file, including .obj extension is optional)
+    w = Wavefront::File.new "my_waverfront_model"                   (import file, including .obj extension is optional)
     w.export "my_exported_wavefront_model"                        (export file, including .obj extension is optional)
 
     vertex_buffer = w.compute_vertex_buffer                       (compute an array of vertices from file)

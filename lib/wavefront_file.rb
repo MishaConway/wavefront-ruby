@@ -20,6 +20,7 @@ module Wavefront
         end
       end
 
+      #no object was found so let's create one, rewind back to file, and try parsing again
       if objects.size.zero?
         file.rewind
         objects << Wavefront::Object.new("default", file)

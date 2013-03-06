@@ -25,47 +25,6 @@ module Wavefront
       s
     end
 
-    def parse!
-      while line = file.gets
-        components = line.split
-        type = components.shift
-        case type
-          when 'v'
-            vertices << Vec3.new(*components.map(&:to_f))
-          when 'vt'
-            texture_coordinates << Vec3.new(*components.map(&:to_f))
-          when 'vn'
-            normals << Vec3.new(*components.map(&:to_f))
-          when 'vp'
-            #TODO: handle these later
-          when 'f'
-            triangles = []
-            if components.size > 4
-              raise "Sorry this version of the gem does not support polygons with more than 4 points. Updates to this gem will fix this issue."
-            end
-            if components.size == 4
-              triangles << triangle_from_face_components(components[0, 3])
-              triangles << triangle_from_face_components([components[0], components[2], components[3]])
-            elsif components.size == 3
-              triangles << triangle_from_face_components(components)
-            else
-              raise "current version of gem cannot parse triangles with #{components.size} verts!"
-            end
-            triangles.each { |triangle| groups[@current_group].add_triangle triangle }
-          when 'g'
-            name = components.first
-            groups[name] = Group.new name
-            @current_group = name
-          when 's'
-            groups[@current_group].set_smoothing_group components.first
-          when 'o'
-            raise "Wavefront Version #{Wavefront::VERSION} does not support obj files with more than one object. If you encounter such an obj that fails to load, please attach and email to mishaAconway@gmail.com so that I can update the gem to support the file."
-            file.seek -line.size, IO::SEEK_CUR
-            return
-        end
-      end
-    end
-
     def num_faces
       @num_faces = 0
       groups.keys.each do |k|
@@ -73,6 +32,8 @@ module Wavefront
       end
       @num_faces
     end
+
+
 
 
     def export file_name
@@ -123,7 +84,47 @@ module Wavefront
       {:vertex_buffer => vertex_buffer, :index_buffer => index_buffer}
     end
 
-    private
+private
+    def parse!
+      while line = file.gets
+        components = line.split
+        type = components.shift
+        case type
+          when 'v'
+            vertices << Vec3.new(*components.map(&:to_f))
+          when 'vt'
+            texture_coordinates << Vec3.new(*components.map(&:to_f))
+          when 'vn'
+            normals << Vec3.new(*components.map(&:to_f))
+          when 'vp'
+            #TODO: handle these later
+          when 'f'
+            triangles = []
+            if components.size > 4
+              raise "Sorry this version of the gem does not support polygons with more than 4 points. Updates to this gem will fix this issue."
+            end
+            if components.size == 4
+              triangles << triangle_from_face_components(components[0, 3])
+              triangles << triangle_from_face_components([components[0], components[2], components[3]])
+            elsif components.size == 3
+              triangles << triangle_from_face_components(components)
+            else
+              raise "current version of gem cannot parse triangles with #{components.size} verts!"
+            end
+            triangles.each { |triangle| groups[@current_group].add_triangle triangle }
+          when 'g'
+            name = components.first
+            groups[name] = Group.new name
+            @current_group = name
+          when 's'
+            groups[@current_group].set_smoothing_group components.first
+          when 'o'
+            raise "Wavefront Version #{Wavefront::VERSION} does not support obj files with more than one object. If you encounter such an obj that fails to load, please attach and email to mishaAconway@gmail.com so that I can update the gem to support the file."
+            file.seek -line.size, IO::SEEK_CUR
+            return
+        end
+      end
+    end
 
     def triangle_from_face_components face_components
       triangle_vertices = []
