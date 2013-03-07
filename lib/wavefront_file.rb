@@ -10,7 +10,7 @@ module Wavefront
 
       @objects = []
 
-      file = IO::File.new @file_path, 'r'
+      file = ::File.new @file_path, 'r'
       while line = file.gets
         components = line.split
         type = components.shift

@@ -39,7 +39,7 @@ module Wavefront
         file_name += ".obj"
       end
 
-      IO::File.delete file_name if IO::File.exist? file_name
+      ::File.delete file_name if ::File.exist? file_name
       open file_name, 'a' do |f|
         f.puts "# Exported from Wavefront Ruby Gem Version #{Wavefront::VERSION}"
         f.puts "o #{name}"
@@ -118,8 +118,8 @@ private
             @current_group.set_smoothing_group components.first
           when 'o'
             raise "Wavefront Version #{Wavefront::VERSION} does not support obj files with more than one object. If you encounter such an obj that fails to load, please attach and email to mishaAconway@gmail.com so that I can update the gem to support the file."
-            file.seek -line.size, IO::SEEK_CUR
-            return
+            #file.seek -line.size, IO::SEEK_CUR
+            #return
         end
       end
     end
