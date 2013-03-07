@@ -5,7 +5,7 @@ module Wavefront
     def initialize name, file
       @name = name
       @file = file
-      @vertices, @texture_coordinates, @normals, @faces, @groups = [], [], [], [], {}
+      @vertices, @texture_coordinates, @normals, @faces, @groups = [], [], [], [], []
       parse!
     end
 
@@ -13,12 +13,10 @@ module Wavefront
       s = "Object\n\tName: #{name}\n\tNum Vertices: #{vertices.size}\n\tNum Faces: #{num_faces}"
       unless groups.size.zero?
         s += "\n"
-        groups.keys.each do |k|
-          group = groups[k]
-          s += "\tGroup #{k}\n\t\tNum Vertices: #{group.num_vertices}\n\t\tNum Faces: #{group.num_faces}"
-          group.smoothing_groups.keys.each do |sk|
-            smooth = group.smoothing_groups[sk]
-            s += "\n\t\t\tSmoothing Group #{sk}\n\t\t\t\tNum Vertices: #{smooth.num_vertices}\n\t\t\t\tNum Faces: #{smooth.num_faces}"
+        groups.each do |group|
+          s += "\tGroup #{group.name}\n\t\tNum Vertices: #{group.num_vertices}\n\t\tNum Faces: #{group.num_faces}"
+          group.smoothing_groups.each do |smoothing_group|
+            s += "\n\t\t\tSmoothing Group #{smoothing_group.name}\n\t\t\t\tNum Vertices: #{smoothing_group.num_vertices}\n\t\t\t\tNum Faces: #{smoothing_group.num_faces}"
           end
         end
       end
@@ -27,8 +25,8 @@ module Wavefront
 
     def num_faces
       @num_faces = 0
-      groups.keys.each do |k|
-        @num_faces += groups[k].num_faces
+      groups.each do |g|
+        @num_faces += g.num_faces
       end
       @num_faces
     end
@@ -41,7 +39,7 @@ module Wavefront
         file_name += ".obj"
       end
 
-      File.delete file_name if File.exist? file_name
+      IO::File.delete file_name if IO::File.exist? file_name
       open file_name, 'a' do |f|
         f.puts "# Exported from Wavefront Ruby Gem Version #{Wavefront::VERSION}"
         f.puts "o #{name}"
@@ -49,14 +47,13 @@ module Wavefront
         vertices.each { |v| f.puts "v #{v}" }
         texture_coordinates.each { |t| f.puts "vt #{t}" }
         normals.each { |n| f.puts "vn #{n}" }
-        groups.keys.each do |k|
-          group = groups[k]
+        groups.each do |group|
           f.puts "g ##{group.name}"
           group.triangles.each do |t|
             f.puts 'f ' + t.vertices.map { |v| [v.position_index, v.texture_index, v.normal_index].join '/' }.join(' ')
           end
-          group.smoothing_groups.each do |sk, smoothing_group|
-            f.puts "s #{sk}"
+          group.smoothing_groups.each do |smoothing_group|
+            f.puts "s #{smoothing_group.name}"
             smoothing_group.triangles.each do |t|
               f.puts 'f ' + t.vertices.map { |v| [v.position_index, v.texture_index, v.normal_index].join '/' }.join(' ')
             end
@@ -67,9 +64,9 @@ module Wavefront
 
     def compute_vertex_buffer
       vertex_buffer = []
-      groups.values.each do |group|
+      groups.each do |group|
         group.triangles.each { |t| vertex_buffer << t.vertices }
-        group.smoothing_groups.values.each do |smoothing_group|
+        group.smoothing_groups.each do |smoothing_group|
           smoothing_group.triangles.each { |t| vertex_buffer << t.vertices }
         end
       end
@@ -111,13 +108,14 @@ private
             else
               raise "current version of gem cannot parse triangles with #{components.size} verts!"
             end
-            triangles.each { |triangle| groups[@current_group].add_triangle triangle }
+            triangles.each { |triangle| @current_group.add_triangle triangle }
           when 'g'
             name = components.first
-            groups[name] = Group.new name
-            @current_group = name
+            @current_group = Group.new name
+            groups << @current_group
+
           when 's'
-            groups[@current_group].set_smoothing_group components.first
+            @current_group.set_smoothing_group components.first
           when 'o'
             raise "Wavefront Version #{Wavefront::VERSION} does not support obj files with more than one object. If you encounter such an obj that fails to load, please attach and email to mishaAconway@gmail.com so that I can update the gem to support the file."
             file.seek -line.size, IO::SEEK_CUR

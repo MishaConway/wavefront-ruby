@@ -1,9 +1,9 @@
 module Wavefront
   class SmoothingGroup
-    attr_reader :id, :triangles
+    attr_reader :name, :triangles
 
-    def initialize _id
-      @id = _id
+    def initialize _name
+      @name = _name
       @triangles = []
     end
 
@@ -16,7 +16,7 @@ module Wavefront
     end
 
     def num_vertices
-      triangles.size * 3 #this needs to be updated
+      triangles.size * 3
     end
 
     def to_s

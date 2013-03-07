@@ -58,21 +58,24 @@ Or install it yourself as:
     as much as possible. Now with primer aside, let's go over some sample values we can extract from the
     WavefrontFile instance.
 
-    w = Wavefront::File.new "my_waverfront_model"                   (import file, including .obj extension is optional)
+    w = Wavefront::File.new "my_wavefront_model"                  (import file, including .obj extension is optional)
     w.export "my_exported_wavefront_model"                        (export file, including .obj extension is optional)
 
     vertex_buffer = w.compute_vertex_buffer                       (compute an array of vertices from file)
 
     w.object                                                                (inspect object itself)
-    w.object.groups                                                         (inspect groups in object)
-    w.object.groups.values.first.smoothing_groups                           (inspect smoothing groups in a group)
-    w.object.groups.values.first.triangles                                  (inspect faces in a group)
-    w.object.groups.values.first.smoothing_groups.first                     (inspect a single smoothing groups)
-    w.object.groups.values.first.smoothing_groups.values.first.triangles    (inspect faces in a smoothing group)
-    w.object.groups.values.first.triangles.first.vertices                   (inspect vertices on a triangle)
-    w.object.groups.values.first.triangles.first.vertices.first.position    (inspect position on a vertex)
-    w.object.groups.values.first.triangles.first.vertices.first.normal      (inspect normal on a vertex)
-    w.object.groups.values.first.triangles.first.vertices.first.tex         (inspect tex coords on a vertex)
+    group = w.object.groups.first                                           (grab the first group)
+    group.name                                                              (see what it's name is)
+    smoothing_group = group.smoothing_groups.first                          (grab the first smoothing group)
+    smoothing_group.name                                                    (see what it's name is)
+    triangles = smoothing_group.triangles                                   (grab triangles from this smoothing group)
+    triangle = triangles.first                                              (grab the first triangle)
+    vertices = triangle.vertices                                            (get the 3 vertices in this triangle)
+    vertex = vertices.first                                                 (get the first vertex)
+    vertex.position                                                         (look at position)
+    vertex.normal                                                           (look at normal)
+    vertex.tex                                                              (look at texture coordinate)
+
 
     This is just the surface of what you can do to explore the parsed wavefront file. When I get more time, I'll try
     to make these usage examples better.

@@ -5,22 +5,25 @@ module Wavefront
     def initialize n
       @name = n
       @triangles = []
-      @smoothing_groups = {}
+      @smoothing_groups = []
     end
 
-    def set_smoothing_group id
-      if id.nil? || 'off' == id
+    def set_smoothing_group smoothing_group_name
+      if smoothing_group_name.nil? || 'off' == smoothing_group_name.to_s || '0' == smoothing_group_name.to_s
         @current_smoothing_group = nil
       else
-        smoothing_groups[id] = SmoothingGroup.new(id) unless smoothing_groups.keys.include? id
-        @current_smoothing_group = smoothing_groups[id]
+        @current_smoothing_group = smoothing_groups.find{ |sg| sg.name.to_s == smoothing_group_name.to_s }
+        if @current_smoothing_group.nil?
+          @current_smoothing_group = SmoothingGroup.new smoothing_group_name
+          smoothing_groups << @current_smoothing_group
+        end
       end
     end
 
     def merge_smoothing_groups!
       set_smoothing_group nil
-      smoothing_groups.values.each { |smoothing_group| triangles += smoothing_group.triangles }
-      smooth_groups.clear
+      smoothing_groups.each { |smoothing_group| triangles += smoothing_group.triangles }
+      smoothing_groups.clear
     end
 
     def add_triangle triangle
@@ -32,21 +35,11 @@ module Wavefront
     end
 
     def num_faces
-      triangles.size + smoothing_groups.values.map(&:num_faces).inject(:+)
+      triangles.size + smoothing_groups.map(&:num_faces).inject(:+).to_i
     end
 
     def num_vertices
-      triangles.size * 3 + smoothing_groups.values.map(&:num_vertices).inject(:+)
-    end
-
-    def compute_vertex_buffer
-      vertices = []
-      triangles.each { |t| vertices += t.vertices }
-      vertices
-    end
-
-    def compute_vertex_and_index_buffer
-      indices, vertices = [], []
+      triangles.size * 3 + smoothing_groups.map(&:num_vertices).inject(:+).to_i
     end
   end
 end
