@@ -31,9 +31,6 @@ module Wavefront
       @num_faces
     end
 
-
-
-
     def export file_name
       unless /\.obj$/.match file_name
         file_name += ".obj"
@@ -73,15 +70,45 @@ module Wavefront
       vertex_buffer.flatten
     end
 
-    def compute_vertex_buffer_and_index_buffer
-      raise "not yet implemented in version #{Wavefront::VERSION}! will be coming in future versions!"
+    def compute_vertex_and_index_buffer
       vertex_buffer, index_buffer = [], []
 
+      composite_indices = {}
+      current_index = -1
+
+      groups.each do |group|
+        group.triangles.each do |t|
+          t.vertices.each do |v|
+            i = composite_indices[v.composite_index]
+            if i.nil?
+              current_index += 1
+              vertex_buffer << v
+              i = current_index
+              composite_indices[v.composite_index] = i
+            end
+            index_buffer << i
+          end
+        end
+        group.smoothing_groups.each do |smoothing_group|
+          smoothing_group.triangles.each do |t|
+            t.vertices.each do |v|
+              i = composite_indices[v.composite_index]
+              if i.nil?
+                current_index += 1
+                vertex_buffer << v
+                i = current_index
+                composite_indices[v.composite_index] = i
+              end
+              index_buffer << i
+            end
+          end
+        end
+      end
 
       {:vertex_buffer => vertex_buffer, :index_buffer => index_buffer}
     end
 
-private
+    private
     def parse!
       while line = file.gets
         components = line.split
@@ -118,8 +145,8 @@ private
             @current_group.set_smoothing_group components.first
           when 'o'
             raise "Wavefront Version #{Wavefront::VERSION} does not support obj files with more than one object. If you encounter such an obj that fails to load, please attach and email to mishaAconway@gmail.com so that I can update the gem to support the file."
-            #file.seek -line.size, IO::SEEK_CUR
-            #return
+          #file.seek -line.size, IO::SEEK_CUR
+          #return
         end
       end
     end

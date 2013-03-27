@@ -38,6 +38,10 @@ module Wavefront
       object.compute_vertex_buffer
     end
 
+    def compute_vertex_and_index_buffer
+      object.compute_vertex_and_index_buffer
+    end
+
     def object
       objects.first
     end
