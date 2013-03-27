@@ -12,9 +12,9 @@
 
     Some additional operations supported are:
         -computing a simple vertex buffer from the wavefront model
+        -computing a vertex buffer/index buffer
 
     Some features that are coming in the future
-        -ability to compute a vertex/index buffer pair since these will be more optimal than a single giant vertex buffer
         -ability to scale, transform, rotate, and unitize the obj
         -materials (this is a feature I am currently working on, but is not available in the current version)
         -ability to support more than one object. Even though wavefront spec says a file should have only one object,
@@ -62,6 +62,7 @@ Or install it yourself as:
     w.export "my_exported_wavefront_model"                        (export file, including .obj extension is optional)
 
     vertex_buffer = w.compute_vertex_buffer                       (compute an array of vertices from file)
+    vertex_and_index_buffers = w.compute_vertex_and_index_index_buffer
 
     w.object                                                                (inspect object itself)
     group = w.object.groups.first                                           (grab the first group)
