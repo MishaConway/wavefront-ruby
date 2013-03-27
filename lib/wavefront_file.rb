@@ -31,7 +31,12 @@ module Wavefront
 
     def export out_path
       raise "no objects to export!" if objects.size.zero?
-      objects.first.export out_path
+      object.export out_path
+    end
+
+    def export_simple out_path, export_index_buffer = false
+      raise "no objects to export!" if objects.size.zero?
+      object.export_simple out_path, export_index_buffer
     end
 
     def compute_vertex_buffer

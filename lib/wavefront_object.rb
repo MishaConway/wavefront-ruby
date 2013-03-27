@@ -59,6 +59,35 @@ module Wavefront
       end
     end
 
+    def export_simple file_name, export_index_buffer = false
+      file_name += ".simple" unless /\.simple$/.match file_name
+
+      if export_index_buffer
+        vi = compute_vertex_and_index_buffer
+        vertex_buffer = vi[:vertex_buffer]
+        index_buffer = vi[:index_buffer]
+      else
+        vertex_buffer = compute_vertex_buffer
+      end
+
+      ::File.delete file_name if ::File.exist? file_name
+      open file_name, 'a' do |f|
+        f.puts "# Exported in Simple Format from Wavefront Ruby Gem Version #{Wavefront::VERSION}"
+        f.puts "#vertices"
+        vertex_buffer.each do |v|
+          vertex_str = "p,#{v.position.to_a.join ','}"
+          vertex_str += ",n,#{v.normal.to_a.join ','}" if v.normal
+          vertex_str += ",t,#{v.tex.to_a.join ','}" if v.tex
+          f.puts vertex_str
+        end
+        if export_index_buffer
+          f.puts "\n\n\n#indices"
+          f.puts index_buffer.join ','
+        end
+      end
+    end
+
+
     def compute_vertex_buffer
       vertex_buffer = []
       groups.each do |group|
@@ -71,37 +100,18 @@ module Wavefront
     end
 
     def compute_vertex_and_index_buffer
-      vertex_buffer, index_buffer = [], []
+      vertex_buffer, index_buffer, composite_indices, current_index = [], [], {}, -1
 
-      composite_indices = {}
-      current_index = -1
-
-      groups.each do |group|
-        group.triangles.each do |t|
-          t.vertices.each do |v|
-            i = composite_indices[v.composite_index]
-            if i.nil?
-              current_index += 1
-              vertex_buffer << v
-              i = current_index
-              composite_indices[v.composite_index] = i
-            end
-            index_buffer << i
+      groups.map { |g| (g.triangles + g.smoothing_groups.map(&:triangles).flatten) }.flatten.each do |triangle|
+        triangle.vertices.each do |v|
+          i = composite_indices[v.composite_index]
+          if i.nil?
+            current_index += 1
+            vertex_buffer << v
+            i = current_index
+            composite_indices[v.composite_index] = i
           end
-        end
-        group.smoothing_groups.each do |smoothing_group|
-          smoothing_group.triangles.each do |t|
-            t.vertices.each do |v|
-              i = composite_indices[v.composite_index]
-              if i.nil?
-                current_index += 1
-                vertex_buffer << v
-                i = current_index
-                composite_indices[v.composite_index] = i
-              end
-              index_buffer << i
-            end
-          end
+          index_buffer << i
         end
       end
 
@@ -160,9 +170,9 @@ module Wavefront
 
         normal_index = vertex_str_components[2]
 
-        position = vertices[position_index]
-        tex_coordinate = tex_index ? texture_coordinates[tex_index] : nil
-        normal = normals[normal_index]
+        position = vertices[position_index-1]
+        tex_coordinate = tex_index ? texture_coordinates[tex_index-1] : nil
+        normal = normals[normal_index-1]
 
         triangle_vertices << Vertex.new(position, tex_coordinate, normal, position_index, tex_index, normal_index)
       end

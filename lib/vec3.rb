@@ -9,7 +9,11 @@ module Wavefront
     end
 
     def to_s
-      [x, y, z].compact.join ' '
+      to_a.compact.join ' '
+    end
+
+    def to_a
+      [x, y, z]
     end
   end
 end
