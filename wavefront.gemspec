@@ -11,6 +11,7 @@ Gem::Specification.new do |gem|
   gem.description   = %q{Wavefront parser and exporter}
   gem.summary       = %q{Wavefront parser and exporter}
   gem.homepage      = "https://github.com/MishaConway/wavefront-ruby"
+  gem.license       = 'MIT'
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
