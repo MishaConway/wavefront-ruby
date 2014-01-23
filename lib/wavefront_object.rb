@@ -119,6 +119,12 @@ module Wavefront
     end
 
     private
+    def set_new_group name
+      @current_group = Group.new name
+      groups << @current_group
+    end
+
+
     def parse!
       while line = file.gets
         components = line.split
@@ -145,12 +151,10 @@ module Wavefront
             else
               raise "current version of gem cannot parse triangles with #{components.size} verts!"
             end
+            set_new_group 'default' if @current_group.nil?
             triangles.each { |triangle| @current_group.add_triangle triangle }
           when 'g'
-            name = components.first
-            @current_group = Group.new name
-            groups << @current_group
-
+            set_new_group components.first
           when 's'
             @current_group.set_smoothing_group components.first
           when 'o'
@@ -174,9 +178,9 @@ module Wavefront
         tex_coordinate = tex_index ? texture_coordinates[tex_index-1] : nil
         normal = normals[normal_index-1]
 
-        triangle_vertices << Vertex.new(position, tex_coordinate, normal, position_index, tex_index, normal_index)
+        triangle_vertices << Wavefront::Vertex.new(position, tex_coordinate, normal, position_index, tex_index, normal_index)
       end
-      Triangle.new triangle_vertices
+      Wavefront::Triangle.new triangle_vertices
     end
   end
 end
